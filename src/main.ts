@@ -4,6 +4,9 @@ import { address, isAddress, createSolanaRpc, createSolanaRpcSubscriptions } fro
 const rpc = createSolanaRpc('https://solana-rpc.publicnode.com');
 const subs = createSolanaRpcSubscriptions('wss://solana-rpc.publicnode.com');
 const TOKEN_PROGRAM = address('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
+// PublicNode only keeps recent history. Wallet history goes through the Vite proxy
+// (/rpc → api.mainnet-beta, see vite.config.ts), with PublicNode as the fallback.
+const archive = createSolanaRpc(`${location.origin}/rpc`);
 
 const $ = (id: string) => document.getElementById(id)!;
 const fmt = (n: number) => n.toLocaleString('en-US', { maximumFractionDigits: 0 });
@@ -337,14 +340,18 @@ type Delta = { mint: string; amt: number };
 type WTx = { sig: string; time: number; sol: number; deltas: Delta[]; inUsd: number; outUsd: number; kind: Kind };
 
 async function loadWallet(who: string): Promise<{ txs: WTx[]; failed: number }> {
-  const all = await rpc.getSignaturesForAddress(address(who), { limit: 100 }).send();
+  let src = archive;
+  let all;
+  try { all = await archive.getSignaturesForAddress(address(who), { limit: 100 }).send(); }
+  catch { src = rpc; all = await rpc.getSignaturesForAddress(address(who), { limit: 100 }).send(); }
   const ok = all.filter((s) => !s.err).slice(0, 30);
   const failed = all.slice(0, all.indexOf(ok[ok.length - 1]) + 1).filter((s) => s.err).length;
   const raw: { sig: string; time: number; sol: number; deltas: Delta[] }[] = [];
   for (let i = 0; i < ok.length; i += 6) {
     const batch = ok.slice(i, i + 6);
     $('wsummary').innerHTML = `<span class="muted">Reading transaction ${i + 1}–${i + batch.length} of ${ok.length}…</span>`;
-    const txs = await Promise.all(batch.map((s) => rpc.getTransaction(s.signature, { maxSupportedTransactionVersion: 1 as 0, encoding: 'json' }).send().catch(() => null)));
+    const get = (s: (typeof batch)[number]) => src.getTransaction(s.signature, { maxSupportedTransactionVersion: 1 as 0, encoding: 'json' }).send();
+    const txs = await Promise.all(batch.map((s) => get(s).catch(() => sleep(600).then(() => get(s))).catch(() => null)));
     txs.forEach((tx, j) => {
       let sol = 0; const deltas: Delta[] = [];
       const meta = tx?.meta;
