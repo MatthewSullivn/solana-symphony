@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Solana Symphony</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <main class="wrap">
+    <nav>
+      <span class="logo">◐ symphony</span>
+      <span id="status" class="badge"><span class="dot"></span><span id="statusText">connecting</span></span>
+    </nav>
+
+    <section class="hero">
+      <h1>Listen to <em>Solana</em>.</h1>
+      <p class="lede">The live blockchain, played as music. Every block is a note. Every validator has its own melody. Every token transaction is a hi-hat.</p>
+      <div class="controls">
+        <button id="play" class="btn primary">▶ Start listening</button>
+        <label class="field">Scale
+          <select id="scale">
+            <option value="minorPent">Minor pentatonic</option>
+            <option value="majorPent">Major pentatonic</option>
+            <option value="dorian">Dorian</option>
+            <option value="lydian">Lydian</option>
+            <option value="hirajoshi">Hirajoshi</option>
+          </select>
+        </label>
+        <label class="field">Volume <input id="vol" type="range" min="0" max="1" step="0.01" value="0.7" /></label>
+        <label class="field check"><input id="perc" type="checkbox" checked /> Percussion</label>
+      </div>
+    </section>
+
+    <section class="stage">
+      <canvas id="roll"></canvas>
+      <div class="legend">
+        <span><i class="sw note"></i>block (pitch &amp; color = validator)</span>
+        <span><i class="sw bar"></i>leader rotation = downbeat</span>
+        <span><i class="sw tick"></i>token tx</span>
+        <span><i class="sw fail"></i>failed tx</span>
+        <span><i class="sw skip"></i>skipped block</span>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card now">
+        <div class="label">Now conducting</div>
+        <div class="leader"><i id="leaderSw" class="sw big"></i><span id="leader" class="mono">—</span></div>
+        <div class="label sm">Its 4-note motif</div>
+        <div id="motif" class="motif"></div>
+        <div id="voice" class="muted mono sm">—</div>
+      </div>
+      <div class="card stats">
+        <div><div class="label">Slot</div><div id="slot" class="num">—</div></div>
+        <div><div class="label">Tempo</div><div class="num"><span id="bpm">—</span><small> bpm</small></div></div>
+        <div><div class="label">Network TPS</div><div id="tps" class="num">—</div></div>
+        <div><div class="label">Validators heard</div><div id="vals" class="num">0</div></div>
+        <div><div class="label">Token txs played</div><div id="txs" class="num">0</div></div>
+        <div><div class="label">Skipped blocks</div><div id="skips" class="num">0</div></div>
+      </div>
+    </section>
+
+    <section class="card wallet">
+      <div class="label">Interactive</div>
+      <h2>Hear your <em>wallet</em>.</h2>
+      <p class="muted">Paste any Solana address. Its last 30 transactions replay as a melody, oldest to newest. Money in plays high and bright, money out plays low, bigger amounts ring louder, failed transactions crack like a snare.</p>
+      <form id="wform">
+        <input id="waddr" placeholder="Solana wallet address" spellcheck="false" autocomplete="off" />
+        <button type="submit" class="btn primary">♪ Play wallet</button>
+        <button type="button" id="wrand" class="btn">Random live wallet</button>
+      </form>
+      <div id="wstage" class="stage wstage" hidden>
+        <div class="wnow">
+          <div><div id="wnowAmt" class="wamt">—</div><div id="wnowSub" class="muted mono sm">—</div></div>
+          <button id="wreplay" class="btn">↻ Replay</button>
+        </div>
+        <canvas id="wcanvas"></canvas>
+      </div>
+      <div id="wsummary"></div>
+      <details id="wdetails" hidden><summary>All transactions</summary><div id="wlist" class="txlist"></div></details>
+    </section>
+
+    <section class="how">
+      <div class="card"><div class="k">01</div><h3>Blocks → notes</h3><p>Solana produces a block every ~400ms. Each one plays a note, so the network's real speed is the tempo.</p></div>
+      <div class="card"><div class="k">02</div><h3>Validators → melodies</h3><p>Each validator leads for 4 slots. Its address deterministically picks a scale position, timbre and 4-note motif, so it always plays its own phrase.</p></div>
+      <div class="card"><div class="k">03</div><h3>Transactions → rhythm</h3><p>Live SPL token transactions tick as hi-hats. Failed ones snap as snares. Network TPS opens the filter on the bass pad.</p></div>
+      <div class="card"><div class="k">04</div><h3>Skipped → dissonance</h3><p>When a validator misses its slot, the chain confirms the gap a few seconds later and you hear it as a dark, clashing thud.</p></div>
+    </section>
+
+    <footer class="muted">Built on <span class="mono">@solana/kit</span> · live mainnet data via websocket + RPC · Web Audio, no samples, no backend</footer>
+  </main>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
